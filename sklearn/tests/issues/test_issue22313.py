@@ -1,11 +1,12 @@
 import numpy as np
+
 from sklearn.utils.estimator_checks import parametrize_with_checks
 from sklearn.base import BaseEstimator, ClassifierMixin, check_X_y
 from sklearn.utils.validation import check_array, check_is_fitted, check_random_state
 
 
 class TemplateEstimator(BaseEstimator, ClassifierMixin):
-    def __init__(self, threshold=0.5, random_state=12345):
+    def __init__(self, threshold=0.5, random_state=None):
         self.threshold = threshold
         self.random_state = random_state
 
