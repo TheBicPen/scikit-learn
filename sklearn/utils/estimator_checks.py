@@ -1300,6 +1300,9 @@ def _apply_on_subsets(func, X):
 def check_methods_subset_invariance(name, estimator_orig):
     # check that method gives invariant results if applied
     # on mini batches or the whole set
+    if _safe_tags(estimator_orig, key="non_deterministic"):
+        msg = name + " is non deterministic"
+        raise SkipTest(msg)
     rnd = np.random.RandomState(0)
     X = 3 * rnd.uniform(size=(20, 3))
     X = _pairwise_estimator_convert_X(X, estimator_orig)
@@ -1336,6 +1339,9 @@ def check_methods_subset_invariance(name, estimator_orig):
 
 @ignore_warnings(category=FutureWarning)
 def check_methods_sample_order_invariance(name, estimator_orig):
+    if _safe_tags(estimator_orig, key="non_deterministic"):
+        msg = name + " is non deterministic"
+        raise SkipTest(msg)
     # check that method gives invariant results if applied
     # on a subset with different sample order
     rnd = np.random.RandomState(0)
