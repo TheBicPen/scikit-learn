@@ -358,6 +358,8 @@ def test_nan():
 
 def test_consistency_path(global_random_seed):
     # Test that the path algorithm is consistent
+
+    # decrease seed variability and use larger dataset size
     seed = global_random_seed % 10
     rng = np.random.RandomState(seed)
     sample_size = 400
@@ -467,6 +469,9 @@ def test_liblinear_dual_random_state(global_random_seed):
         multi_class="ovr",
     )
     lr2.fit(X, y)
+
+    # ensure lr3 random states are different to others
+    # using a fixed seed not in range 0-99
     lr3 = LogisticRegression(
         random_state=101,
         dual=True,
@@ -674,6 +679,8 @@ def test_ovr_multinomial_iris(global_random_seed):
 
 def test_logistic_regression_solvers(global_random_seed):
     """Test solvers converge to the same result."""
+
+    # use larger sample size to reduce variability
     X, y = make_classification(n_samples=400, n_features=10, n_informative=5, random_state=global_random_seed)
 
     params = dict(fit_intercept=False, random_state=global_random_seed, multi_class="ovr")
@@ -815,6 +822,8 @@ def test_logistic_regression_sample_weights(global_random_seed):
             clf_sw_sag.fit(X, y, sample_weight=sample_weight)
         clf_sw_liblinear = LR(solver="liblinear", **kw)
         clf_sw_liblinear.fit(X, y, sample_weight=sample_weight)
+
+        # allow for more variance given larger randomness
         assert_array_almost_equal(clf_sw_lbfgs.coef_, clf_sw_n.coef_, decimal=3)
         assert_array_almost_equal(clf_sw_lbfgs.coef_, clf_sw_sag.coef_, decimal=3)
         assert_array_almost_equal(clf_sw_lbfgs.coef_, clf_sw_liblinear.coef_, decimal=3)
@@ -922,6 +931,7 @@ def test_logistic_regression_multinomial(global_random_seed):
     # Tests for the multinomial option in logistic regression
 
     # Some basic attributes of Logistic Regression
+    # Increase the sample size and reduce noise to test generalized results
     n_samples, n_features, n_classes = 30, 6, 3
     X, y = make_classification(
         n_samples=n_samples,
@@ -1306,6 +1316,7 @@ def test_saga_vs_liblinear(global_random_seed):
     X_bin = X[y <= 1]
     y_bin = y[y <= 1] * 2 - 1
 
+    # increase sample size to reduce random variance
     X_sparse, y_sparse = make_classification(
         n_samples=250, n_features=20, random_state=global_random_seed
     )
@@ -1443,6 +1454,8 @@ def test_warm_start_converge_LR():
 def test_elastic_net_coeffs(global_random_seed):
     # make sure elasticnet penalty gives different coefficients from l1 and l2
     # with saga solver (l1_ratio different from 0 or 1)
+    
+    # increase noise to reduce likelihood of edge cases
     X, y = make_classification(random_state=global_random_seed, n_features=45)
 
     C = 2.0
