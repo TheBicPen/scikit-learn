@@ -27,8 +27,8 @@ from sklearn.utils.sparsefuncs_fast import (
 from sklearn.utils._testing import assert_allclose
 
 
-def test_mean_variance_axis0():
-    X, _ = make_classification(5, 4, random_state=0)
+def test_mean_variance_axis0(global_random_seed):
+    X, _ = make_classification(5, 4, random_state=global_random_seed)
     # Sparsify the array a little bit
     X[0, 0] = 0
     X[2, 1] = 0
@@ -63,10 +63,10 @@ def test_mean_variance_axis0():
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
 @pytest.mark.parametrize("sparse_constructor", [sp.csr_matrix, sp.csc_matrix])
-def test_mean_variance_axis0_precision(dtype, sparse_constructor):
+def test_mean_variance_axis0_precision(dtype, sparse_constructor, global_random_seed):
     # Check that there's no big loss of precision when the real variance is
     # exactly 0. (#19766)
-    rng = np.random.RandomState(0)
+    rng = np.random.RandomState(global_random_seed)
     X = np.full(fill_value=100.0, shape=(1000, 1), dtype=dtype)
     # Add some missing records which should be ignored:
     missing_indices = rng.choice(np.arange(X.shape[0]), 10, replace=False)
@@ -81,8 +81,9 @@ def test_mean_variance_axis0_precision(dtype, sparse_constructor):
     assert var < np.finfo(dtype).eps
 
 
-def test_mean_variance_axis1():
-    X, _ = make_classification(5, 4, random_state=0)
+def test_mean_variance_axis1(global_random_seed):
+    #increase sample size to reduce variability
+    X, _ = make_classification(n_samples=200, n_features=4, random_state=global_random_seed)
     # Sparsify the array a little bit
     X[0, 0] = 0
     X[2, 1] = 0
@@ -312,11 +313,12 @@ def test_incr_mean_variance_axis_weighted_axis0(
     assert n_incr_w1.dtype == dtype
 
 
-def test_incr_mean_variance_axis():
+def test_incr_mean_variance_axis(global_random_seed):
     for axis in [0, 1]:
-        rng = np.random.RandomState(0)
+        rng = np.random.RandomState(global_random_seed)
         n_features = 50
-        n_samples = 10
+        #increase sampe size to reduce variability
+        n_samples = 400
         if axis == 0:
             data_chunks = [rng.randint(0, 2, size=n_features) for i in range(n_samples)]
         else:
@@ -394,13 +396,16 @@ def test_incr_mean_variance_axis():
 
 
 @pytest.mark.parametrize("sparse_constructor", [sp.csc_matrix, sp.csr_matrix])
-def test_incr_mean_variance_axis_dim_mismatch(sparse_constructor):
+def test_incr_mean_variance_axis_dim_mismatch(sparse_constructor, global_random_seed):
     """Check that we raise proper error when axis=1 and the dimension mismatch.
     Non-regression test for:
     https://github.com/scikit-learn/scikit-learn/pull/18655
     """
-    n_samples, n_features = 60, 4
-    rng = np.random.RandomState(42)
+    #increase sample size to reduce varibility
+    # increase noise to reduce likelihood of edge cases
+
+    n_samples, n_features = 400, 10
+    rng = np.random.RandomState(global_random_seed)
     X = sparse_constructor(rng.rand(n_samples, n_features))
 
     last_mean = np.zeros(n_features)
@@ -461,11 +466,11 @@ def test_incr_mean_variance_axis_equivalence_mean_variance(X1, X2):
     assert_allclose(updated_n, np.count_nonzero(~np.isnan(X.A), axis=0))
 
 
-def test_incr_mean_variance_no_new_n():
+def test_incr_mean_variance_no_new_n(global_random_seed):
     # check the behaviour when we update the variance with an empty matrix
     axis = 0
-    X1 = sp.random(5, 1, density=0.8, random_state=0).tocsr()
-    X2 = sp.random(0, 1, density=0.8, random_state=0).tocsr()
+    X1 = sp.random(5, 1, density=0.8, random_state=global_random_seed).tocsr()
+    X2 = sp.random(0, 1, density=0.8, random_state=global_random_seed).tocsr()
     last_mean, last_var = np.zeros(X1.shape[1]), np.zeros(X1.shape[1])
     last_n = np.zeros(X1.shape[1], dtype=np.int64)
     last_mean, last_var, last_n = incr_mean_variance_axis(
@@ -480,10 +485,10 @@ def test_incr_mean_variance_no_new_n():
     assert_allclose(updated_n, last_n)
 
 
-def test_incr_mean_variance_n_float():
+def test_incr_mean_variance_n_float(global_random_seed):
     # check the behaviour when last_n is just a number
     axis = 0
-    X = sp.random(5, 2, density=0.8, random_state=0).tocsr()
+    X = sp.random(5, 2, density=0.8, random_state=global_random_seed).tocsr()
     last_mean, last_var = np.zeros(X.shape[1]), np.zeros(X.shape[1])
     last_n = 0
     _, _, new_n = incr_mean_variance_axis(
@@ -541,8 +546,8 @@ def test_incr_mean_variance_axis_ignore_nan(axis, sparse_constructor):
     assert_allclose(X_nan_sample_count, X_sample_count)
 
 
-def test_mean_variance_illegal_axis():
-    X, _ = make_classification(5, 4, random_state=0)
+def test_mean_variance_illegal_axis(global_random_seed):
+    X, _ = make_classification(5, 4, random_state=global_random_seed)
     # Sparsify the array a little bit
     X[0, 0] = 0
     X[2, 1] = 0
@@ -587,8 +592,8 @@ def test_densify_rows():
         assert_array_equal(out, expect)
 
 
-def test_inplace_column_scale():
-    rng = np.random.RandomState(0)
+def test_inplace_column_scale(global_random_seed):
+    rng = np.random.RandomState(global_random_seed)
     X = sp.rand(100, 200, 0.05)
     Xr = X.tocsr()
     Xc = X.tocsc()
@@ -619,8 +624,8 @@ def test_inplace_column_scale():
         inplace_column_scale(X.tolil(), scale)
 
 
-def test_inplace_row_scale():
-    rng = np.random.RandomState(0)
+def test_inplace_row_scale(global_random_seed):
+    rng = np.random.RandomState(global_random_seed)
     X = sp.rand(100, 200, 0.05)
     Xr = X.tocsr()
     Xc = X.tocsc()
@@ -843,11 +848,11 @@ def test_count_nonzero():
         assert "according to the rule 'safe'" in e.args[0] and np.intp().nbytes < 8, e
 
 
-def test_csc_row_median():
+def test_csc_row_median(global_random_seed):
     # Test csc_row_median actually calculates the median.
 
     # Test that it gives the same output when X is dense.
-    rng = np.random.RandomState(0)
+    rng = np.random.RandomState(global_random_seed)
     X = rng.rand(100, 50)
     dense_median = np.median(X, axis=0)
     csc = sp.csc_matrix(X)
@@ -877,9 +882,9 @@ def test_csc_row_median():
         csc_median_axis_0(sp.csr_matrix(X))
 
 
-def test_inplace_normalize():
+def test_inplace_normalize(global_random_seed):
     ones = np.ones((10, 1))
-    rs = RandomState(10)
+    rs = RandomState(global_random_seed)
 
     for inplace_csr_row_normalize in (
         inplace_csr_row_normalize_l1,
@@ -904,10 +909,10 @@ def test_inplace_normalize():
 
 
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
-def test_csr_row_norms(dtype):
+def test_csr_row_norms(dtype, global_random_seed):
     # checks that csr_row_norms returns the same output as
     # scipy.sparse.linalg.norm, and that the dype is the same as X.dtype.
-    X = sp.random(100, 10, format="csr", dtype=dtype, random_state=42)
+    X = sp.random(100, 10, format="csr", dtype=dtype, random_state=global_random_seed)
 
     scipy_norms = sp.linalg.norm(X, axis=1) ** 2
     norms = csr_row_norms(X)
