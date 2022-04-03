@@ -496,6 +496,11 @@ class GroupKFold(_BaseKFold):
      [7 8]] [[1 2]
      [3 4]] [3 4] [1 2]
 
+    Notes
+    -----
+    The groups will be in an arbitrary order
+
+
     See Also
     --------
     LeaveOneGroupOut : For splitting the data according to explicit
@@ -1137,6 +1142,10 @@ class LeaveOneGroupOut(BaseCrossValidator):
     [[1 2]
      [3 4]] [[5 6]
      [7 8]] [1 2] [1 2]
+
+    Notes
+    -----
+    groups will be sorted depending to the index left out.
 
     """
 

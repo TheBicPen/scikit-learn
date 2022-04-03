@@ -1018,6 +1018,28 @@ def test_leave_one_p_group_out():
     with pytest.raises(ValueError, match=msg):
         lpgo_1.get_n_splits(None, None, None)
 
+def test_leave_group_out_is_ordered():
+    # Check that LeaveOneGroupOut orders the splits
+    groups = np.array([1, 1, 3, 2, 4, 4, 4, 6])
+    X = np.ones(8)
+
+    splits = iter(LeaveOneGroupOut().split(X, groups=groups))
+
+    train, test = next(splits)
+    assert_array_equal(train, [2, 3, 4, 5, 6, 7])
+    assert_array_equal(test, [0, 1])
+
+    train, test = next(splits)
+    assert_array_equal(train, [0, 1, 2, 4, 5, 6, 7])
+    assert_array_equal(test, [3])
+
+    train, test = next(splits)
+    assert_array_equal(train, [0, 1, 3, 4, 5, 6, 7])
+    assert_array_equal(test, [2])
+
+    train, test = next(splits)
+    assert_array_equal(train, [0, 1, 2, 3, 7])
+    assert_array_equal(test, [4, 5, 6])
 
 def test_leave_group_out_changing_groups():
     # Check that LeaveOneGroupOut and LeavePGroupsOut work normally if
